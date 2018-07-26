@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -16,6 +17,12 @@ const (
 	shutdownTimeout        = 60 * time.Second
 )
 
+type server struct{}
+
+func (s *server) healthz(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
 func main() {
 	cfg := cfg.Parse()
 
@@ -23,6 +30,9 @@ func main() {
 	xchi.UseDefaultMiddleware(router)
 	xchi.UseThrottle(router, concurrentRequestLimit)
 	xchi.UseTimeout(router, requestTimeout)
+
+	srv := &server{}
+	router.Get("/healthz", srv.healthz)
 
 	xhttp.ListenAndServe(cfg.Addr, router, shutdownTimeout)
 }
