@@ -5,18 +5,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi"
 	"github.com/nats-io/go-nats"
 
-	xchi "github.com/sknv/micronats/app/lib/chi"
+	xnats "github.com/sknv/micronats/app/lib/nats"
 	xhttp "github.com/sknv/micronats/app/lib/net/http"
-	"github.com/sknv/micronats/app/rest/cfg"
-	"github.com/sknv/micronats/app/rest/server"
+	"github.com/sknv/micronats/app/services/math/cfg"
+	math "github.com/sknv/micronats/app/services/math/server"
 )
 
 const (
-	concurrentRequestLimit = 1000
-	shutdownTimeout        = 60 * time.Second
+	serviceName     = "math"
+	shutdownTimeout = 60 * time.Second
 )
 
 // ----------------------------------------------------------------------------
@@ -41,19 +40,21 @@ func main() {
 	failOnError(err, "failed to connect to NATS server")
 	defer natsconn.Close()
 
-	// config the http router
-	router := chi.NewRouter()
-	xchi.UseDefaultMiddleware(router)
-	xchi.UseThrottle(router, concurrentRequestLimit)
-
-	// route the server
-	srv := server.Server{NatsConn: natsconn}
-	srv.Route(router)
+	// run the service
+	natsrouter := xnats.Router{
+		Conn:  natsconn,
+		Queue: serviceName,
+	}
+	mathserver := math.Server{NatsConn: natsconn}
+	mathserver.Route(&natsrouter)
+	log.Printf("[INFO] %s service started", serviceName)
+	defer log.Printf("[INFO] %s service stopped", serviceName)
 
 	// run the http server
 	var healthcheck healthcheck
-	router.Get("/healthz", healthcheck.healthz)
-	xhttp.ListenAndServe(cfg.Addr, router, shutdownTimeout)
+	httprouter := http.NewServeMux()
+	httprouter.HandleFunc("/healthz", healthcheck.healthz)
+	xhttp.ListenAndServe(cfg.Addr, httprouter, shutdownTimeout)
 }
 
 func failOnError(err error, message string) {

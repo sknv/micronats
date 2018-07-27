@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	Addr    string `long:"rest-addr" env:"REST_ADDR" default:"localhost:8080" description:"rest api address"`
+	Addr    string `long:"math-addr" env:"MATH_ADDR" default:"localhost:8081" description:"math service address"`
 	NatsURL string `long:"nats-url" env:"NATS_URL" default:"nats://localhost:4222" description:"nats server url"`
 }
 
