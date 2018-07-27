@@ -37,7 +37,7 @@ func main() {
 
 	// connect to the NATS server
 	natsconn, err := nats.Connect(cfg.NatsURL)
-	failOnError(err, "failed to connect to NATS server")
+	failOnError(err, "failed to connect to the NATS server")
 	defer natsconn.Close()
 
 	// run the service

@@ -21,7 +21,7 @@ func NewClient(natsconn *nats.Conn, timeout time.Duration) *Client {
 func (c *Client) Rect(_ context.Context, args *RectArgs) (*RectReply, error) {
 	var reply RectReply
 	if err := c.Request("/math/rect", args, &reply); err != nil {
-		return nil, errors.Wrap(err, "failed to Math.Rect")
+		return nil, errors.Wrap(err, "failed to call Math.Rect")
 	}
 	return &reply, nil
 }
@@ -29,7 +29,7 @@ func (c *Client) Rect(_ context.Context, args *RectArgs) (*RectReply, error) {
 func (c *Client) Circle(_ context.Context, args *CircleArgs) (*CircleReply, error) {
 	var reply CircleReply
 	if err := c.Request("/math/circle", args, &reply); err != nil {
-		return nil, errors.Wrap(err, "failed to Math.Circle")
+		return nil, errors.Wrap(err, "failed to call Math.Circle")
 	}
 	return &reply, nil
 }

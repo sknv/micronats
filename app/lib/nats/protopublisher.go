@@ -6,6 +6,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	errPublishMessage = "failed to publish a reply"
+)
+
 type ProtoPublisher struct {
 	Conn *nats.Conn
 }
@@ -15,22 +19,20 @@ func NewProtoPublisher(natsconn *nats.Conn) *ProtoPublisher {
 }
 
 func (p *ProtoPublisher) Publish(subject string, reply proto.Message) error {
-	errWrapMessage := "failed to publish a reply"
 	data, err := proto.Marshal(reply)
 	if err != nil {
-		return errors.Wrap(err, errWrapMessage)
+		return errors.Wrap(err, errPublishMessage)
 	}
 
 	if err = p.Conn.Publish(subject, data); err != nil {
-		return errors.Wrap(err, errWrapMessage)
+		return errors.Wrap(err, errPublishMessage)
 	}
 	return nil
 }
 
 func (p *ProtoPublisher) TryPublish(subject string, reply proto.Message, err error) error {
-	errWrapMessage := "failed to publish a reply"
 	if err != nil {
-		return errors.Wrap(err, errWrapMessage)
+		return errors.Wrap(err, errPublishMessage)
 	}
 	return p.Publish(subject, reply)
 }

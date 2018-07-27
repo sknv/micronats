@@ -29,8 +29,8 @@ func UseTimeout(router chi.Router, timeout time.Duration) {
 	router.Use(middleware.Timeout(timeout))
 }
 
-func WithTimeout(router chi.Router, requestTimeout time.Duration) chi.Router {
-	return router.With(middleware.Timeout(requestTimeout))
+func WithTimeout(router chi.Router, timeout time.Duration) chi.Router {
+	return router.With(middleware.Timeout(timeout))
 }
 
 func UseLimitHandler(router chi.Router, limit float64) {
