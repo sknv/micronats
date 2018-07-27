@@ -17,20 +17,28 @@ func UseDefaultMiddleware(router chi.Router) {
 	)
 }
 
-func UseThrottle(router chi.Router, concurrentRequestLimit int) {
-	router.Use(middleware.Throttle(concurrentRequestLimit))
+func UseThrottle(router chi.Router, limit int) {
+	router.Use(middleware.Throttle(limit))
 }
 
-func UseTimeout(router chi.Router, requestTimeout time.Duration) {
-	router.Use(middleware.Timeout(requestTimeout))
+func WithThrottle(router chi.Router, limit int) chi.Router {
+	return router.With(middleware.Throttle(limit))
 }
 
-func UseLimitHandler(router chi.Router, requestLimit float64) {
-	limiter := tollbooth.NewLimiter(requestLimit, nil)
+func UseTimeout(router chi.Router, timeout time.Duration) {
+	router.Use(middleware.Timeout(timeout))
+}
+
+func WithTimeout(router chi.Router, requestTimeout time.Duration) chi.Router {
+	return router.With(middleware.Timeout(requestTimeout))
+}
+
+func UseLimitHandler(router chi.Router, limit float64) {
+	limiter := tollbooth.NewLimiter(limit, nil)
 	router.Use(tollbooth_chi.LimitHandler(limiter))
 }
 
-func WithLimitHandler(router chi.Router, requestLimit float64) chi.Router {
-	limiter := tollbooth.NewLimiter(requestLimit, nil)
+func WithLimitHandler(router chi.Router, limit float64) chi.Router {
+	limiter := tollbooth.NewLimiter(limit, nil)
 	return router.With(tollbooth_chi.LimitHandler(limiter))
 }

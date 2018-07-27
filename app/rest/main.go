@@ -47,7 +47,7 @@ func main() {
 	xchi.UseThrottle(router, concurrentRequestLimit)
 
 	// route the server
-	srv := server.Server{NatsConn: natsconn}
+	srv := server.NewServer(natsconn)
 	srv.Route(router)
 
 	// run the http server

@@ -3,11 +3,14 @@ package internal
 import (
 	"context"
 	"log"
+	"math"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/nats-io/go-nats"
 
 	xnats "github.com/sknv/micronats/app/lib/nats"
+	xmath "github.com/sknv/micronats/app/services/math/service"
 )
 
 type Server struct {
@@ -15,14 +18,66 @@ type Server struct {
 }
 
 func (s *Server) Route(router *xnats.Router) {
-	router.Handle("/math/hello", withLogger(s.Hello))
+	router.Handle("/math/rect", withLogger(s.HandleRect))
+	router.Handle("/math/circle", withLogger(s.HandleCircle))
 }
 
-func (s *Server) Hello(_ context.Context, message *nats.Msg) {
-	name := string(message.Data)
-	log.Print("hello, " + name)
-	time.Sleep(3 * time.Second)
-	s.NatsConn.Publish(message.Reply, []byte("Hello, "+name))
+func (s *Server) HandleRect(ctx context.Context, message *nats.Msg) {
+	var args xmath.RectArgs
+	if err := proto.Unmarshal(message.Data, &args); err != nil {
+		panic(err) // TODO: return error
+	}
+
+	reply, err := s.Rect(ctx, &args)
+	if err != nil {
+		panic(err) // TODO: return error
+	}
+
+	data, err := proto.Marshal(reply)
+	if err != nil {
+		panic(err) // TODO: return error
+	}
+	s.NatsConn.Publish(message.Reply, data)
+}
+
+func (s *Server) HandleCircle(ctx context.Context, message *nats.Msg) {
+	var args xmath.CircleArgs
+	if err := proto.Unmarshal(message.Data, &args); err != nil {
+		panic(err) // TODO: return error
+	}
+
+	reply, err := s.Circle(ctx, &args)
+	if err != nil {
+		panic(err) // TODO: return error
+	}
+
+	data, err := proto.Marshal(reply)
+	if err != nil {
+		panic(err) // TODO: return error
+	}
+	s.NatsConn.Publish(message.Reply, data)
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+func (s *Server) Rect(_ context.Context, args *xmath.RectArgs) (*xmath.RectReply, error) {
+	perimeter := 2*args.Width + 2*args.Height
+	square := args.Width * args.Height
+	return &xmath.RectReply{
+		Perimeter: perimeter,
+		Square:    square,
+	}, nil
+}
+
+func (s *Server) Circle(_ context.Context, args *xmath.CircleArgs) (*xmath.CircleReply, error) {
+	len := 2 * math.Pi * args.Radius
+	square := math.Pi * args.Radius * args.Radius
+	return &xmath.CircleReply{
+		Length: len,
+		Square: square,
+	}, nil
 }
 
 // ----------------------------------------------------------------------------
