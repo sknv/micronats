@@ -1,4 +1,4 @@
-package internal
+package server
 
 import (
 	"context"
@@ -14,7 +14,11 @@ import (
 )
 
 type Server struct {
-	NatsConn *nats.Conn
+	*xnats.ProtoPublisher
+}
+
+func NewServer(natsconn *nats.Conn) *Server {
+	return &Server{ProtoPublisher: xnats.NewProtoPublisher(natsconn)}
 }
 
 func (s *Server) Route(router *xnats.Router) {
@@ -29,15 +33,9 @@ func (s *Server) HandleRect(ctx context.Context, message *nats.Msg) {
 	}
 
 	reply, err := s.Rect(ctx, &args)
-	if err != nil {
+	if err = s.TryPublish(message.Reply, reply, err); err != nil {
 		panic(err) // TODO: return error
 	}
-
-	data, err := proto.Marshal(reply)
-	if err != nil {
-		panic(err) // TODO: return error
-	}
-	s.NatsConn.Publish(message.Reply, data)
 }
 
 func (s *Server) HandleCircle(ctx context.Context, message *nats.Msg) {
@@ -47,15 +45,9 @@ func (s *Server) HandleCircle(ctx context.Context, message *nats.Msg) {
 	}
 
 	reply, err := s.Circle(ctx, &args)
-	if err != nil {
+	if err = s.TryPublish(message.Reply, reply, err); err != nil {
 		panic(err) // TODO: return error
 	}
-
-	data, err := proto.Marshal(reply)
-	if err != nil {
-		panic(err) // TODO: return error
-	}
-	s.NatsConn.Publish(message.Reply, data)
 }
 
 // ----------------------------------------------------------------------------

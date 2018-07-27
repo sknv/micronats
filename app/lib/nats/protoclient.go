@@ -9,25 +9,25 @@ import (
 )
 
 type ProtoClient struct {
-	NatsConn *nats.Conn
-	Timeout  time.Duration
+	Conn    *nats.Conn
+	Timeout time.Duration
 }
 
 func NewProtoClient(natsconn *nats.Conn, timeout time.Duration) *ProtoClient {
 	return &ProtoClient{
-		NatsConn: natsconn,
-		Timeout:  timeout,
+		Conn:    natsconn,
+		Timeout: timeout,
 	}
 }
 
-func (c *ProtoClient) Request(subj string, args proto.Message, reply proto.Message) error {
+func (c *ProtoClient) Request(subject string, args proto.Message, reply proto.Message) error {
 	errWrapMessage := "failed to make a request"
 	data, err := proto.Marshal(args)
 	if err != nil {
 		return errors.Wrap(err, errWrapMessage)
 	}
 
-	msg, err := c.NatsConn.Request(subj, data, c.Timeout)
+	msg, err := c.Conn.Request(subject, data, c.Timeout)
 	if err != nil {
 		return errors.Wrap(err, errWrapMessage)
 	}

@@ -45,7 +45,7 @@ func main() {
 		Conn:  natsconn,
 		Queue: serviceName,
 	}
-	mathserver := math.Server{NatsConn: natsconn}
+	mathserver := math.NewServer(natsconn)
 	mathserver.Route(&natsrouter)
 	log.Printf("[INFO] %s service started", serviceName)
 	defer log.Printf("[INFO] %s service stopped", serviceName)
