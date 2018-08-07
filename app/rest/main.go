@@ -1,63 +1,49 @@
 package main
 
 import (
-	"log"
-	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/nats-io/go-nats"
 
-	xchi "github.com/sknv/micronats/app/lib/chi"
-	xhttp "github.com/sknv/micronats/app/lib/net/http"
+	"github.com/sknv/micronats/app/lib/xchi"
+	"github.com/sknv/micronats/app/lib/xhttp"
+	"github.com/sknv/micronats/app/lib/xos"
 	"github.com/sknv/micronats/app/rest/cfg"
 	"github.com/sknv/micronats/app/rest/server"
 )
 
 const (
 	concurrentRequestLimit = 1000
-	shutdownTimeout        = 60 * time.Second
+	serverShutdownTimeout  = 60 * time.Second
 )
-
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-type healthcheck struct{}
-
-func (*healthcheck) healthz(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-}
-
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
 
 func main() {
 	cfg := cfg.Parse()
 
-	// connect to the NATS server
-	natsconn, err := nats.Connect(cfg.NatsURL)
-	failOnError(err, "failed to connect to the NATS server")
-	defer natsconn.Close()
+	// connect to NATS
+	natsConn, err := nats.Connect(cfg.NatsAddr)
+	xos.FailOnError(err, "failed to connect to NATS")
+	defer natsConn.Close()
 
 	// config the http router
 	router := chi.NewRouter()
 	xchi.UseDefaultMiddleware(router)
 	xchi.UseThrottle(router, concurrentRequestLimit)
 
-	// route the server
-	srv := server.NewServer(natsconn)
-	srv.Route(router)
+	// handle requests
+	rest := server.NewRestServer(natsConn)
+	rest.Route(router)
 
-	// run the http server
-	var healthcheck healthcheck
-	router.Get("/healthz", healthcheck.healthz)
-	xhttp.ListenAndServe(cfg.Addr, router, shutdownTimeout)
-}
+	// handle health check requests
+	var health xhttp.HealthServer
+	router.Get("/healthz", health.Check)
 
-func failOnError(err error, message string) {
-	if err != nil {
-		log.Fatalf("%s: %s", message, err)
-	}
+	// start the http server and schedule a stop
+	srv := xhttp.NewServer(cfg.Addr, router)
+	srv.ListenAndServeAsync()
+	defer srv.StopGracefully(serverShutdownTimeout)
+
+	// wait for a program exit to stop the http server
+	xos.WaitForExit()
 }

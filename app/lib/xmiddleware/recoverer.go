@@ -1,9 +1,9 @@
-package middleware
+package xmiddleware
 
 import (
 	"net/http"
 
-	xhttp "github.com/sknv/micronats/app/lib/net/http"
+	"github.com/sknv/micronats/app/lib/xhttp"
 )
 
 func Recoverer(next http.Handler) http.Handler {

@@ -1,6 +1,6 @@
 # micronats
 
-microservices via NATS messaging system
+protobuf-based microservices via NATS
 
 ## Key Technologies
 

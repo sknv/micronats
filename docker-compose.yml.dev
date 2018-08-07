@@ -5,6 +5,6 @@ services:
     image: nats:1.2.0-linux
     entrypoint: /gnatsd -DV -m 8222
     ports:
-      - 4222:4222
-      - 8222:8222
+      - 4222:4222 # nats port
+      - 8222:8222 # nats monitoring port
     restart: unless-stopped
