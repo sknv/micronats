@@ -14,7 +14,7 @@ import (
 
 	"github.com/sknv/micronats/app/lib/xhttp"
 	"github.com/sknv/micronats/app/lib/xnats/status"
-	math "github.com/sknv/micronats/app/services/math/rpc"
+	math "github.com/sknv/micronats/app/math/rpc"
 )
 
 type RestServer struct {

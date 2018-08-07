@@ -7,8 +7,8 @@ import (
 
 	"github.com/sknv/micronats/app/lib/xnats"
 	"github.com/sknv/micronats/app/lib/xos"
-	"github.com/sknv/micronats/app/services/math/cfg"
-	"github.com/sknv/micronats/app/services/math/server"
+	"github.com/sknv/micronats/app/math/cfg"
+	"github.com/sknv/micronats/app/math/server"
 )
 
 func main() {

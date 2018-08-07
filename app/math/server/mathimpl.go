@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/sknv/micronats/app/lib/xnats/status"
-	"github.com/sknv/micronats/app/services/math/rpc"
+	"github.com/sknv/micronats/app/math/rpc"
 )
 
 type MathImpl struct{}

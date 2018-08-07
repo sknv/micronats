@@ -9,7 +9,7 @@ import (
 	"github.com/nats-io/go-nats"
 
 	"github.com/sknv/micronats/app/lib/xnats"
-	"github.com/sknv/micronats/app/services/math/rpc"
+	"github.com/sknv/micronats/app/math/rpc"
 )
 
 const (
