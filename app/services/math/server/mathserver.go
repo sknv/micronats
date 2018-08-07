@@ -17,10 +17,7 @@ const (
 )
 
 func RegisterMathServer(natsServer *xnats.Server, math rpc.Math) {
-	mathServer := mathServer{
-		math:      math,
-		publisher: xnats.NewProtoPublisher(natsServer.Conn),
-	}
+	mathServer := newMathServer(natsServer.Conn, math)
 	mathServer.route(natsServer)
 }
 
@@ -33,6 +30,14 @@ type mathServer struct {
 	publisher *xnats.ProtoPublisher
 }
 
+func newMathServer(natsConn *nats.Conn, math rpc.Math) *mathServer {
+	return &mathServer{
+		math:      math,
+		publisher: xnats.NewProtoPublisher(natsConn),
+	}
+}
+
+// map a request to a pattern
 func (s *mathServer) route(natsServer *xnats.Server) {
 	natsServer.Handle(rpc.CirclePattern, mathQueue, withLogger(s.Circle))
 	natsServer.Handle(rpc.RectPattern, mathQueue, withLogger(s.Rect))

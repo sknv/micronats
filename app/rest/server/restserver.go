@@ -10,8 +10,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/nats-io/go-nats"
+	"github.com/pkg/errors"
 
 	"github.com/sknv/micronats/app/lib/xhttp"
+	"github.com/sknv/micronats/app/lib/xnats/status"
 	math "github.com/sknv/micronats/app/services/math/rpc"
 )
 
@@ -85,15 +87,13 @@ func abortOnError(w http.ResponseWriter, err error) {
 
 	log.Print("[ERROR] abort on error: ", err)
 
-	// todo: process as an xnats error
-	//
-	// cause := errors.Cause(err)
-	// rerr, _ := status.FromError(cause)
-	// status := status.ServerHTTPStatusFromErrorCode(rerr.StatusCode())
-	// if status != http.StatusInternalServerError {
-	// 	http.Error(w, rerr.GetMessage(), status)
-	// 	xhttp.AbortHandler()
-	// }
-	//
+	// process as an xnats.Status
+	cause := errors.Cause(err)
+	stat, _ := status.FromError(cause)
+	httpCode := status.ServerHTTPStatusFromErrorCode(stat.StatusCode())
+	if httpCode != http.StatusInternalServerError {
+		http.Error(w, stat.GetMessage(), httpCode)
+		xhttp.AbortHandler()
+	}
 	xhttp.AbortHandlerWithInternalError(w)
 }

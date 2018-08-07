@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/sknv/micronats/app/lib/xcontext"
+	"github.com/sknv/micronats/app/lib/xnats/status"
 )
 
 type ProtoClient struct {
@@ -26,11 +27,14 @@ func (c *ProtoClient) Call(ctx context.Context, proc string, args proto.Message,
 
 	timeout, _ := xcontext.Timeout(ctx)
 	msg, err := c.Conn.Request(proc, data, timeout)
-	if err != nil {
+	if err != nil { // handle network errors
+		if err != nats.ErrTimeout { // wrap timeout error if such exist
+			err = status.Error(status.DeadlineExceeded, err.Error())
+		}
 		return errors.Wrapf(err, "failed to call a remote proc: %s", proc)
 	}
 
-	// todo: handle an error transfered over the network
+	// todo: handle errors transfered over the network
 	//
 	// if status.HasError(msg) {
 	// 	rerr := new(status.Status)
