@@ -8,11 +8,6 @@ import (
 	"github.com/sknv/micronats/app/lib/xnats/rpc"
 )
 
-const (
-	CirclePattern = "/rpc/math/circle"
-	RectPattern   = "/rpc/math/rect"
-)
-
 type MathClient struct {
 	*rpc.ProtoClient
 }

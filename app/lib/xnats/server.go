@@ -18,7 +18,7 @@ func (s *Server) Handle(subject, queue string, handler HandlerFunc) (*nats.Subsc
 		go handler(context.Background(), msg) // process messages in a goroutine
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to set a message handler")
+		return nil, errors.WithMessage(err, "failed to set a message handler")
 	}
 	return sub, nil
 }

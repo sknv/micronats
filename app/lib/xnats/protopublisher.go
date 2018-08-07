@@ -17,11 +17,11 @@ func NewProtoPublisher(conn *nats.Conn) *ProtoPublisher {
 func (p *ProtoPublisher) Publish(subject string, message proto.Message) error {
 	data, err := proto.Marshal(message)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal a message to protobuf")
+		return errors.WithMessage(err, "failed to marshal a message to protobuf")
 	}
 
 	if err = p.Conn.Publish(subject, data); err != nil {
-		return errors.Wrap(err, "failed to publish a message")
+		return errors.WithMessage(err, "failed to publish a message")
 	}
 	return nil
 }
