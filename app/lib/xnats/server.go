@@ -19,10 +19,19 @@ func NewServer(conn *nats.Conn) *Server {
 
 func (s *Server) Handle(subject, queue string, handler HandlerFunc) (*nats.Subscription, error) {
 	sub, err := s.Conn.QueueSubscribe(subject, queue, func(msg *nats.Msg) {
-		go handler(context.Background(), msg) // process messages in a goroutine
+		s.handleMessage(msg, handler)
 	})
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to set a message handler")
 	}
 	return sub, nil
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+func (s *Server) handleMessage(message *nats.Msg, handler HandlerFunc) {
+	ctx := context.Background()
+	go handler(ctx, message) // process messages in a goroutine
 }

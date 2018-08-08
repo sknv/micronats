@@ -38,7 +38,7 @@ func (c *ProtoClient) Call(ctx context.Context, proc string, args proto.Message,
 	// }
 
 	if err = proto.Unmarshal(msg.Data, reply); err != nil {
-		return errors.WithMessage(err, "failed to unmarshal a reply from protobuf")
+		return errors.WithMessage(err, "failed to unmarshal the reply from protobuf")
 	}
 	return nil
 }

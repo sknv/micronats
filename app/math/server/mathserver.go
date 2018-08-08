@@ -46,32 +46,38 @@ func (s *mathServer) route(natsServer *xnats.Server) {
 func (s *mathServer) circle(ctx context.Context, message *nats.Msg) {
 	args := new(rpc.CircleArgs)
 	if err := proto.Unmarshal(message.Data, args); err != nil {
-		panic(err) // todo: return error
+		log.Print("[ERROR] ", err) // todo: return error
+		return
 	}
 
 	reply, err := s.math.Circle(ctx, args)
 	if err != nil {
-		panic(err) // todo: return error
+		log.Print("[ERROR] ", err) // todo: return error
+		return
 	}
 
 	if err = s.publisher.Publish(message.Reply, reply); err != nil {
-		panic(err) // todo: return error
+		log.Print("[ERROR] ", err) // todo: return error
+		return
 	}
 }
 
 func (s *mathServer) rect(ctx context.Context, message *nats.Msg) {
 	args := new(rpc.RectArgs)
 	if err := proto.Unmarshal(message.Data, args); err != nil {
-		panic(err) // todo: return error
+		log.Print("[ERROR] ", err) // todo: return error
+		return
 	}
 
 	reply, err := s.math.Rect(ctx, args)
 	if err != nil {
-		panic(err) // todo: return error
+		log.Print("[ERROR] ", err) // todo: return error
+		return
 	}
 
 	if err = s.publisher.Publish(message.Reply, reply); err != nil {
-		panic(err) // todo: return error
+		log.Print("[ERROR] ", err) // todo: return error
+		return
 	}
 }
 
