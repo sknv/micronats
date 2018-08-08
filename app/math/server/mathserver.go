@@ -39,11 +39,11 @@ func newMathServer(natsConn *nats.Conn, math rpc.Math) *mathServer {
 
 // map a request to a pattern
 func (s *mathServer) route(natsServer *xnats.Server) {
-	natsServer.Handle(rpc.CirclePattern, mathQueue, withLogger(s.Circle))
-	natsServer.Handle(rpc.RectPattern, mathQueue, withLogger(s.Rect))
+	natsServer.Handle(rpc.CirclePattern, mathQueue, withLogger(s.circle))
+	natsServer.Handle(rpc.RectPattern, mathQueue, withLogger(s.rect))
 }
 
-func (s *mathServer) Circle(ctx context.Context, message *nats.Msg) {
+func (s *mathServer) circle(ctx context.Context, message *nats.Msg) {
 	args := new(rpc.CircleArgs)
 	if err := proto.Unmarshal(message.Data, args); err != nil {
 		panic(err) // todo: return error
@@ -57,13 +57,9 @@ func (s *mathServer) Circle(ctx context.Context, message *nats.Msg) {
 	if err = s.publisher.Publish(message.Reply, reply); err != nil {
 		panic(err) // todo: return error
 	}
-
-	// if err = s.TryPublish(message.Reply, reply, err); err != nil {
-	// 	panic(err) // todo: return error
-	// }
 }
 
-func (s *mathServer) Rect(ctx context.Context, message *nats.Msg) {
+func (s *mathServer) rect(ctx context.Context, message *nats.Msg) {
 	args := new(rpc.RectArgs)
 	if err := proto.Unmarshal(message.Data, args); err != nil {
 		panic(err) // todo: return error

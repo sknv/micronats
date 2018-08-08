@@ -13,6 +13,10 @@ type Server struct {
 	Conn *nats.Conn
 }
 
+func NewServer(conn *nats.Conn) *Server {
+	return &Server{Conn: conn}
+}
+
 func (s *Server) Handle(subject, queue string, handler HandlerFunc) (*nats.Subscription, error) {
 	sub, err := s.Conn.QueueSubscribe(subject, queue, func(msg *nats.Msg) {
 		go handler(context.Background(), msg) // process messages in a goroutine

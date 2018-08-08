@@ -20,7 +20,7 @@ func main() {
 	defer natsConn.Close()
 
 	// handle nats requests
-	natsServer := &xnats.Server{Conn: natsConn}
+	natsServer := xnats.NewServer(natsConn)
 	server.RegisterMathServer(natsServer, &server.MathImpl{})
 
 	log.Print("[INFO] math service started")
