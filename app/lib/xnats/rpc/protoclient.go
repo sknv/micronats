@@ -4,8 +4,12 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/nats-io/go-nats"
 	"github.com/pkg/errors"
+
+	"github.com/sknv/micronats/app/lib/xnats/message"
+	"github.com/sknv/micronats/app/lib/xnats/status"
 )
 
 type ProtoClient struct {
@@ -27,18 +31,23 @@ func (c *ProtoClient) Call(ctx context.Context, proc string, args proto.Message,
 		return errors.WithMessage(err, "failed to call a remote proc")
 	}
 
-	// todo: handle errors transfered over the network
-	//
-	// if status.HasError(msg) {
-	// 	rerr := new(status.Status)
-	// 	if err = proto.Unmarshal(msg.Body, rerr); err != nil {
-	// 		return errors.WithMessage(err, "failed to unmarshal an error from protobuf")
-	// 	}
-	// 	return rerr
-	// }
-
-	if err = proto.Unmarshal(msg.Data, reply); err != nil {
+	// unmarshal to protowrapper
+	protoMsg := new(message.Message)
+	if err = proto.Unmarshal(msg.Data, protoMsg); err != nil {
 		return errors.WithMessage(err, "failed to unmarshal the reply from protobuf")
+	}
+
+	// handle errors transfered over the network
+	if protoMsg.HasError() {
+		status := new(status.Status)
+		if err = ptypes.UnmarshalAny(protoMsg.Body, status); err != nil {
+			return errors.WithMessage(err, "failed to unmarshal the error from protobug any")
+		}
+		return status
+	}
+
+	if err = ptypes.UnmarshalAny(protoMsg.Body, reply); err != nil {
+		return errors.WithMessage(err, "failed to unmarshal the reply from protobuf any")
 	}
 	return nil
 }

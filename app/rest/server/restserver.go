@@ -92,7 +92,7 @@ func abortOnError(w http.ResponseWriter, err error) {
 	stat, _ := status.FromError(cause)
 	httpCode := status.ServerHTTPStatusFromErrorCode(stat.StatusCode())
 	if httpCode != http.StatusInternalServerError {
-		http.Error(w, stat.GetMessage(), httpCode)
+		http.Error(w, stat.Message, httpCode)
 		xhttp.AbortHandler()
 	}
 	xhttp.AbortHandlerWithInternalError(w)
