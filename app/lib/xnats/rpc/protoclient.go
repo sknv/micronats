@@ -31,7 +31,7 @@ func (c *ProtoClient) Call(ctx context.Context, proc string, args proto.Message,
 		return errors.WithMessage(err, "failed to call a remote proc")
 	}
 
-	// unmarshal to protowrapper
+	// unmarshal to proto message wrapper
 	protoMsg := new(message.Message)
 	if err = proto.Unmarshal(msg.Data, protoMsg); err != nil {
 		return errors.WithMessage(err, "failed to unmarshal the reply from protobuf")
@@ -46,6 +46,7 @@ func (c *ProtoClient) Call(ctx context.Context, proc string, args proto.Message,
 		return status
 	}
 
+	// unmarshal the reply
 	if err = ptypes.UnmarshalAny(protoMsg.Body, reply); err != nil {
 		return errors.WithMessage(err, "failed to unmarshal the reply from protobuf any")
 	}

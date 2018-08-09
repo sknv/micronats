@@ -79,16 +79,11 @@ func (s *Status) MetaValue(key string) string {
 }
 
 func (s *Status) WithMeta(key string, value string) *Status {
-	newErr := &Status{
-		Code:    s.Code,
-		Message: s.Message,
-		Meta:    make(map[string]string, len(s.Meta)),
+	if s.Meta == nil {
+		s.Meta = make(map[string]string)
 	}
-	for key, val := range s.Meta { // copy existing map
-		newErr.Meta[key] = val
-	}
-	newErr.Meta[key] = value // upsert the value
-	return newErr
+	s.Meta[key] = value // upsert the value
+	return s
 }
 
 func (s *Status) Error() string {
