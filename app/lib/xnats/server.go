@@ -22,7 +22,7 @@ func (s *Server) Handle(subject, queue string, handler HandlerFunc) (*nats.Subsc
 		s.handleMessage(msg, handler)
 	})
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to set a message handler")
+		return nil, errors.WithMessage(err, "failed to set a message handler for "+subject)
 	}
 	return sub, nil
 }

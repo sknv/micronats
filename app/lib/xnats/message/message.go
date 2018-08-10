@@ -16,10 +16,9 @@ func (m *Message) HasError() bool {
 	return statusError == statusCode(status)
 }
 
-func (m *Message) WithError() *Message {
+func (m *Message) WithError() {
 	if m.Meta == nil {
 		m.Meta = make(map[string]string)
 	}
 	m.Meta[statusCodeKey] = string(statusError) // upsert the value
-	return m
 }

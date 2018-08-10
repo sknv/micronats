@@ -78,12 +78,11 @@ func (s *Status) MetaValue(key string) string {
 	return ""
 }
 
-func (s *Status) WithMeta(key string, value string) *Status {
+func (s *Status) WithMeta(key string, value string) {
 	if s.Meta == nil {
 		s.Meta = make(map[string]string)
 	}
 	s.Meta[key] = value // upsert the value
-	return s
 }
 
 func (s *Status) Error() string {
