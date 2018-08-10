@@ -15,12 +15,12 @@ func main() {
 	cfg := cfg.Parse()
 
 	// connect to NATS
-	natsConn, err := nats.Connect(cfg.NatsAddr)
+	natsConn, _ := nats.Connect(cfg.NatsAddr)
+	encConn, err := nats.NewEncodedConn(natsConn, nats.JSON_ENCODER)
 	xos.FailOnError(err, "failed to connect to NATS")
-	defer natsConn.Close()
 
 	// handle nats requests
-	natsServer := xnats.NewServer(natsConn)
+	natsServer := xnats.NewServer(encConn)
 	server.RegisterMathServer(natsServer, &server.MathImpl{})
 
 	log.Print("[INFO] math service started")
