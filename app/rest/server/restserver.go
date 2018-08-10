@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/sknv/micronats/app/lib/xhttp"
-	"github.com/sknv/micronats/app/lib/xnats/status"
+	"github.com/sknv/micronats/app/lib/xnats"
 	math "github.com/sknv/micronats/app/math/rpc"
 )
 
@@ -21,8 +21,8 @@ type RestServer struct {
 	mathClient math.Math
 }
 
-func NewRestServer(natsConn *nats.Conn) *RestServer {
-	return &RestServer{mathClient: math.NewMathClient(natsConn)}
+func NewRestServer(encConn *nats.EncodedConn) *RestServer {
+	return &RestServer{mathClient: math.NewMathClient(encConn)}
 }
 
 func (s *RestServer) Route(router chi.Router) {
@@ -89,8 +89,8 @@ func abortOnError(w http.ResponseWriter, err error) {
 
 	// process as an xnats.Status
 	cause := errors.Cause(err)
-	stat, _ := status.FromError(cause)
-	httpCode := status.ServerHTTPStatusFromErrorCode(stat.StatusCode())
+	stat, _ := xnats.StatusFromError(cause)
+	httpCode := xnats.ServerHTTPStatusFromErrorCode(stat.StatusCode())
 	if httpCode != http.StatusInternalServerError {
 		http.Error(w, stat.Message, httpCode)
 		xhttp.AbortHandler()

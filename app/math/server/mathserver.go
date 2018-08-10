@@ -25,14 +25,16 @@ func RegisterMathServer(natsServer *xnats.Server, math rpc.Math) {
 // ----------------------------------------------------------------------------
 
 type mathServer struct {
+	encConn   *nats.EncodedConn
 	math      rpc.Math
-	responder *xnats.Responder
+	publisher *xnats.Publisher
 }
 
 func newMathServer(encConn *nats.EncodedConn, math rpc.Math) *mathServer {
 	return &mathServer{
+		encConn:   encConn,
 		math:      math,
-		responder: xnats.NewResponder(encConn),
+		publisher: xnats.NewPublisher(encConn),
 	}
 }
 
@@ -42,16 +44,38 @@ func (s *mathServer) route(natsServer *xnats.Server) {
 	natsServer.Handle(rpc.RectSubject, mathQueue, withLogger(s.rect))
 }
 
-func (s *mathServer) circle(ctx context.Context, _, replyTo string, args interface{}) {
-	reply, err := s.math.Circle(ctx, args.(*rpc.CircleArgs))
-	err = s.responder.Response(replyTo, reply, err)
-	logIfError(err)
+func (s *mathServer) circle(ctx context.Context, subject, replyTo string, message *xnats.Message) {
+	args := new(rpc.CircleArgs)
+	if err := s.encConn.Enc.Decode(subject, message.Body, args); err != nil {
+		log.Print("[ERROR] failed to decode the message body: ", err)
+		stat := xnats.ErrorStatus(xnats.StatusInvalidArgument, err.Error())
+		if err = s.publisher.Publish(replyTo, nil, stat); err != nil {
+			log.Print("[ERROR] failed to publish the error status: ", err)
+		}
+		return
+	}
+
+	reply, err := s.math.Circle(ctx, args)
+	if err = s.publisher.Publish(replyTo, reply, err); err != nil {
+		log.Print("[ERROR] failed to publish the reply: ", err)
+	}
 }
 
-func (s *mathServer) rect(ctx context.Context, _, replyTo string, args interface{}) {
-	reply, err := s.math.Rect(ctx, args.(*rpc.RectArgs))
-	err = s.responder.Response(replyTo, reply, err)
-	logIfError(err)
+func (s *mathServer) rect(ctx context.Context, subject, replyTo string, message *xnats.Message) {
+	args := new(rpc.RectArgs)
+	if err := s.encConn.Enc.Decode(subject, message.Body, args); err != nil {
+		log.Print("[ERROR] failed to decode the message body: ", err)
+		stat := xnats.ErrorStatus(xnats.StatusInvalidArgument, err.Error())
+		if err = s.publisher.Publish(replyTo, nil, stat); err != nil {
+			log.Print("[ERROR] failed to publish the error status: ", err)
+		}
+		return
+	}
+
+	reply, err := s.math.Rect(ctx, args)
+	if err = s.publisher.Publish(replyTo, reply, err); err != nil {
+		log.Print("[ERROR] failed to publish the reply: ", err)
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -59,18 +83,12 @@ func (s *mathServer) rect(ctx context.Context, _, replyTo string, args interface
 // ----------------------------------------------------------------------------
 
 func withLogger(next xnats.HandlerFunc) xnats.HandlerFunc {
-	fn := func(ctx context.Context, subject, replyTo string, msg interface{}) {
+	fn := func(ctx context.Context, subject, replyTo string, msg *xnats.Message) {
 		start := time.Now()
 		defer func() {
-			log.Printf("[INFO] request \"%s\" processed in %s", subject, time.Since(start))
+			log.Printf("[INFO] request %s processed in %s", subject, time.Since(start))
 		}()
 		next(ctx, subject, replyTo, msg)
 	}
 	return fn
-}
-
-func logIfError(err error) {
-	if err != nil {
-		log.Print("[ERROR] ", err)
-	}
 }

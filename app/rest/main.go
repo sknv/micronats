@@ -22,9 +22,9 @@ func main() {
 	cfg := cfg.Parse()
 
 	// connect to NATS
-	natsConn, err := nats.Connect(cfg.NatsAddr)
+	natsConn, _ := nats.Connect(cfg.NatsAddr)
+	encConn, err := nats.NewEncodedConn(natsConn, nats.JSON_ENCODER)
 	xos.FailOnError(err, "failed to connect to NATS")
-	defer natsConn.Close()
 
 	// config the http router
 	router := chi.NewRouter()
@@ -32,7 +32,7 @@ func main() {
 	xchi.UseThrottle(router, concurrentRequestLimit)
 
 	// handle requests
-	rest := server.NewRestServer(natsConn)
+	rest := server.NewRestServer(encConn)
 	rest.Route(router)
 
 	// handle health check requests

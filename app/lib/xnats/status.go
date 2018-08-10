@@ -77,6 +77,10 @@ func (s *Status) StatusCode() StatusCode {
 	return StatusCode(s.Code)
 }
 
+func (s *Status) HasError() bool {
+	return s.StatusCode() != StatusOK
+}
+
 func (s *Status) MetaValue(key string) string {
 	if s.Meta != nil {
 		return s.Meta[key] // also returns "" if key is not in meta map
