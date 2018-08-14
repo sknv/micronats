@@ -26,8 +26,10 @@ func (c *RemoteClient) Call(ctx context.Context, proc string, args interface{}, 
 		return errors.WithMessage(err, "failed to encode the message body")
 	}
 
-	// todo: add metadata from context
-	argsMsg := &message.Message{Body: body}
+	argsMsg := &message.Message{
+		Body: body,
+		Meta: Metadata(ctx),
+	}
 
 	replyMsg := new(message.Message)
 	if err = c.EncConn.RequestWithContext(ctx, proc, argsMsg, replyMsg); err != nil { // handle network errors

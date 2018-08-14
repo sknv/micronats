@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/sknv/micronats/app/lib/xhttp"
+	"github.com/sknv/micronats/app/lib/xnats"
 	"github.com/sknv/micronats/app/lib/xnats/status"
 	math "github.com/sknv/micronats/app/math/rpc"
 )
@@ -32,6 +33,10 @@ func (s *RestServer) Route(router chi.Router) {
 	})
 }
 
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
 func (s *RestServer) circle(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	radius := parseFloat(w, queryParams.Get("r"))
@@ -39,8 +44,11 @@ func (s *RestServer) circle(w http.ResponseWriter, r *http.Request) {
 		Radius: radius,
 	}
 
+	// add sample metadata
+	ctx := xnats.WithMetaValue(context.Background(), "foo", "bar")
+
 	// set the reply timeout
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
 	reply, err := s.mathClient.Circle(ctx, &args)

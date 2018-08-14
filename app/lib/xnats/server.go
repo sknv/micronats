@@ -49,8 +49,13 @@ func (s *Server) handleMessageAsync(subject, replyTo string, message *message.Me
 			}
 		}()
 
-		// todo: fill the context with metadata
+		// fill the context with metadata
 		ctx := context.Background()
+		if message.Meta != nil {
+			for key, val := range message.Meta {
+				ctx = WithMetaValue(ctx, key, val)
+			}
+		}
 
 		// execute the interceptors
 		handlerFn = s.chainInterceptors(handlerFn)

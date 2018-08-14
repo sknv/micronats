@@ -2,18 +2,22 @@ package server
 
 import (
 	"context"
+	"log"
 	"math"
 
+	"github.com/sknv/micronats/app/lib/xnats"
 	"github.com/sknv/micronats/app/lib/xnats/status"
 	"github.com/sknv/micronats/app/math/rpc"
 )
 
 type MathImpl struct{}
 
-func (*MathImpl) Circle(_ context.Context, args *rpc.CircleArgs) (*rpc.CircleReply, error) {
+func (*MathImpl) Circle(ctx context.Context, args *rpc.CircleArgs) (*rpc.CircleReply, error) {
 	if args.Radius <= 0 {
 		return nil, status.Error(status.InvalidArgument, "radius must be a positive number")
 	}
+
+	log.Printf("[INFO] circle meta foo: %s", xnats.MetaValue(ctx, "foo")) // access sample metadata
 
 	return &rpc.CircleReply{
 		Length: 2 * math.Pi * args.Radius,
