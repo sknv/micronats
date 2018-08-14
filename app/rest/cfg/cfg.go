@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	Addr     string `long:"rest-addr" env:"REST_ADDR" default:"localhost:8080" description:"rest api address"`
-	NatsAddr string `long:"nats-addr" env:"NATS_ADDR" default:"nats://localhost:4222" description:"nats address"`
+	Addr     string `long:"rest-addr" env:"REST_ADDR" default:":8080" description:"rest api address"`
+	NatsAddr string `long:"nats-addr" env:"NATS_ADDR" default:"nats://127.0.0.1:4222" description:"nats address"`
 }
 
 func Parse() *Config {

@@ -2,13 +2,15 @@ package xnats
 
 import (
 	"context"
+	"log"
 
 	"github.com/nats-io/go-nats"
 
-	"github.com/sknv/micronats/app/lib/xos"
+	"github.com/sknv/micronats/app/lib/xnats/message"
 )
 
-type HandlerFunc func(context.Context, string, string, *Message)
+// HandlerFunc recievies context, subject, replyTo, message and returns an error
+type HandlerFunc func(context.Context, string, string, *message.Message) error
 
 type Server struct {
 	EncConn *nats.EncodedConn
@@ -19,10 +21,12 @@ func NewServer(encConn *nats.EncodedConn) *Server {
 }
 
 func (s *Server) Handle(subject, queue string, handlerFn HandlerFunc) *nats.Subscription {
-	sub, err := s.EncConn.QueueSubscribe(subject, queue, func(_, replyTo string, msg *Message) {
+	sub, err := s.EncConn.QueueSubscribe(subject, queue, func(_subject, replyTo string, msg *message.Message) {
 		s.handleMessageAsync(subject, replyTo, msg, handlerFn)
 	})
-	xos.FailOnError(err, "failed to set a message handler for "+subject)
+	if err != nil {
+		log.Fatalf("[FATAL] %s: %s", "failed to set a message handler for "+subject, err)
+	}
 	return sub
 }
 
@@ -30,14 +34,21 @@ func (s *Server) Handle(subject, queue string, handlerFn HandlerFunc) *nats.Subs
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-func (s *Server) handleMessageAsync(subject, replyTo string, message *Message, handlerFn HandlerFunc) {
+func (s *Server) handleMessageAsync(subject, replyTo string, message *message.Message, handlerFn HandlerFunc) {
 	go func() { // process messages in a goroutine
-		// todo: recover on panic
+		// recover on panic
+		defer func() {
+			if rvr := recover(); rvr != nil {
+				log.Printf("[PANIC] recover: %s", rvr)
+			}
+		}()
 
 		// todo: fill the context with metadata
 		ctx := context.Background()
 
 		// call the handler func
-		handlerFn(ctx, subject, replyTo, message)
+		if err := handlerFn(ctx, subject, replyTo, message); err != nil {
+			log.Printf("[ERROR] failed to handle the subject %s: %s", subject, err)
+		}
 	}()
 }

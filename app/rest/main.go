@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/nats-io/go-nats"
+	"github.com/nats-io/go-nats/encoders/protobuf"
 
 	"github.com/sknv/micronats/app/lib/xchi"
 	"github.com/sknv/micronats/app/lib/xhttp"
@@ -23,8 +24,9 @@ func main() {
 
 	// connect to NATS
 	natsConn, _ := nats.Connect(cfg.NatsAddr)
-	encConn, err := nats.NewEncodedConn(natsConn, nats.JSON_ENCODER)
+	encConn, err := nats.NewEncodedConn(natsConn, protobuf.PROTOBUF_ENCODER)
 	xos.FailOnError(err, "failed to connect to NATS")
+	defer encConn.Close()
 
 	// config the http router
 	router := chi.NewRouter()

@@ -6,6 +6,9 @@ import (
 
 	"github.com/nats-io/go-nats"
 	"github.com/pkg/errors"
+
+	"github.com/sknv/micronats/app/lib/xnats/message"
+	"github.com/sknv/micronats/app/lib/xnats/status"
 )
 
 type RemoteClient struct {
@@ -22,21 +25,22 @@ func (c *RemoteClient) Call(ctx context.Context, proc string, args interface{}, 
 	if err != nil {
 		return errors.WithMessage(err, "failed to encode the message body")
 	}
-	// todo: add metadata from context
-	argsMsg := &Message{Body: body}
 
-	replyMsg := new(Message)
+	// todo: add metadata from context
+	argsMsg := &message.Message{Body: body}
+
+	replyMsg := new(message.Message)
 	if err = c.EncConn.RequestWithContext(ctx, proc, argsMsg, replyMsg); err != nil { // handle network errors
 		if err == context.DeadlineExceeded { // handle timeout error if such exist
-			err = ErrorStatus(StatusDeadlineExceeded, err.Error())
+			err = status.Error(status.DeadlineExceeded, err.Error())
 		}
 		return errors.WithMessage(err, fmt.Sprintf("failed to call %s", proc))
 	}
 
 	// handle errors transferred over the network
-	stat := replyMsg.Status
-	if stat.HasError() {
-		return stat
+	status := replyMsg.Status
+	if status.HasError() {
+		return status
 	}
 
 	// decode the reply if we are ok

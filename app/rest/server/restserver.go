@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/sknv/micronats/app/lib/xhttp"
-	"github.com/sknv/micronats/app/lib/xnats"
+	"github.com/sknv/micronats/app/lib/xnats/status"
 	math "github.com/sknv/micronats/app/math/rpc"
 )
 
@@ -87,10 +87,10 @@ func abortOnError(w http.ResponseWriter, err error) {
 
 	log.Print("[ERROR] abort on error: ", err)
 
-	// process as an xnats.Status
+	// process as a xnats status
 	cause := errors.Cause(err)
-	stat, _ := xnats.StatusFromError(cause)
-	httpCode := xnats.ServerHTTPStatusFromErrorCode(stat.StatusCode())
+	stat, _ := status.FromError(cause)
+	httpCode := status.ServerHTTPStatusFromErrorCode(stat.StatusCode())
 	if httpCode != http.StatusInternalServerError {
 		http.Error(w, stat.Message, httpCode)
 		xhttp.AbortHandler()

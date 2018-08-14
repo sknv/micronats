@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/nats-io/go-nats"
+	"github.com/nats-io/go-nats/encoders/protobuf"
 
 	"github.com/sknv/micronats/app/lib/xnats"
 	"github.com/sknv/micronats/app/lib/xos"
@@ -16,11 +17,12 @@ func main() {
 
 	// connect to NATS
 	natsConn, _ := nats.Connect(cfg.NatsAddr)
-	encConn, err := nats.NewEncodedConn(natsConn, nats.JSON_ENCODER)
+	encConn, err := nats.NewEncodedConn(natsConn, protobuf.PROTOBUF_ENCODER)
 	xos.FailOnError(err, "failed to connect to NATS")
+	defer encConn.Close()
 
 	// handle nats requests
-	natsServer := xnats.NewServer(encConn)
+	natsServer := xnats.NewServer(encConn) // todo: add interceptors
 	server.RegisterMathServer(natsServer, &server.MathImpl{})
 
 	log.Print("[INFO] math service started")

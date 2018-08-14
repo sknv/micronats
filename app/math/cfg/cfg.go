@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	NatsAddr string `long:"nats-addr" env:"NATS_ADDR" default:"nats://localhost:4222" description:"nats address"`
+	NatsAddr string `long:"nats-addr" env:"NATS_ADDR" default:"nats://127.0.0.1:4222" description:"nats address"`
 }
 
 func Parse() *Config {

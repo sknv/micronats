@@ -2,12 +2,13 @@ package server
 
 import (
 	"context"
-	"log"
-	"time"
 
 	"github.com/nats-io/go-nats"
+	"github.com/pkg/errors"
 
 	"github.com/sknv/micronats/app/lib/xnats"
+	"github.com/sknv/micronats/app/lib/xnats/message"
+	"github.com/sknv/micronats/app/lib/xnats/status"
 	"github.com/sknv/micronats/app/math/rpc"
 )
 
@@ -25,70 +26,66 @@ func RegisterMathServer(natsServer *xnats.Server, math rpc.Math) {
 // ----------------------------------------------------------------------------
 
 type mathServer struct {
-	encConn   *nats.EncodedConn
+	encoder   nats.Encoder
 	math      rpc.Math
 	publisher *xnats.Publisher
 }
 
 func newMathServer(encConn *nats.EncodedConn, math rpc.Math) *mathServer {
 	return &mathServer{
-		encConn:   encConn,
+		encoder:   encConn.Enc,
 		math:      math,
 		publisher: xnats.NewPublisher(encConn),
 	}
 }
 
-// map a request to a pattern
+// map a request to a subject
 func (s *mathServer) route(natsServer *xnats.Server) {
-	natsServer.Handle(rpc.CircleSubject, mathQueue, withLogger(s.circle))
-	natsServer.Handle(rpc.RectSubject, mathQueue, withLogger(s.rect))
+	natsServer.Handle(rpc.CircleSubject, mathQueue, s.circle)
+	natsServer.Handle(rpc.RectSubject, mathQueue, s.rect)
 }
 
-func (s *mathServer) circle(ctx context.Context, subject, replyTo string, message *xnats.Message) {
+func (s *mathServer) circle(ctx context.Context, subject, replyTo string, message *message.Message) error {
 	args := new(rpc.CircleArgs)
-	if err := s.encConn.Enc.Decode(subject, message.Body, args); err != nil {
-		log.Print("[ERROR] failed to decode the message body: ", err)
-		stat := xnats.ErrorStatus(xnats.StatusInvalidArgument, err.Error())
-		if err = s.publisher.Publish(replyTo, nil, stat); err != nil {
-			log.Print("[ERROR] failed to publish the error status: ", err)
-		}
-		return
+	if err := s.decodeArgs(subject, replyTo, message, args); err != nil {
+		return err
 	}
 
 	reply, err := s.math.Circle(ctx, args)
 	if err = s.publisher.Publish(replyTo, reply, err); err != nil {
-		log.Print("[ERROR] failed to publish the reply: ", err)
+		return errors.WithMessage(err, "failed to publish the reply")
 	}
+	return nil
 }
 
-func (s *mathServer) rect(ctx context.Context, subject, replyTo string, message *xnats.Message) {
+func (s *mathServer) rect(ctx context.Context, subject, replyTo string, message *message.Message) error {
 	args := new(rpc.RectArgs)
-	if err := s.encConn.Enc.Decode(subject, message.Body, args); err != nil {
-		log.Print("[ERROR] failed to decode the message body: ", err)
-		stat := xnats.ErrorStatus(xnats.StatusInvalidArgument, err.Error())
-		if err = s.publisher.Publish(replyTo, nil, stat); err != nil {
-			log.Print("[ERROR] failed to publish the error status: ", err)
-		}
-		return
+	if err := s.decodeArgs(subject, replyTo, message, args); err != nil {
+		return err
 	}
 
 	reply, err := s.math.Rect(ctx, args)
 	if err = s.publisher.Publish(replyTo, reply, err); err != nil {
-		log.Print("[ERROR] failed to publish the reply: ", err)
+		return errors.WithMessage(err, "failed to publish the reply")
 	}
+	return nil
 }
 
 // ----------------------------------------------------------------------------
-// middleware example
+// ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-func withLogger(next xnats.HandlerFunc) xnats.HandlerFunc {
-	fn := func(ctx context.Context, subject, replyTo string, msg *xnats.Message) {
-		start := time.Now()
-		defer func() {
-			log.Printf("[INFO] request %s processed in %s", subject, time.Since(start))
-		}()
-		next(ctx, subject, replyTo, msg)
+func (s *mathServer) decodeArgs(subject, replyTo string, message *message.Message, args interface{}) error {
+	err := s.encoder.Decode(subject, message.Body, args)
+	if err == nil {
+		return nil
 	}
-	return fn
+
+	err = errors.WithMessage(err, "failed to decode the message body")
+	status := status.Error(status.InvalidArgument, err.Error())
+	if puberr := s.publisher.Publish(replyTo, nil, status); puberr != nil {
+		puberr = errors.WithMessage(puberr, "failed to publish the error status")
+		err = errors.WithMessage(err, puberr.Error())
+	}
+	return err
 }
