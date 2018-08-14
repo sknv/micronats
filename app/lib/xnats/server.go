@@ -12,12 +12,18 @@ import (
 // HandlerFunc recievies context, subject, replyTo, message and returns an error
 type HandlerFunc func(context.Context, string, string, *message.Message) error
 
+type ServerInterceptor func(HandlerFunc) HandlerFunc
+
 type Server struct {
-	EncConn *nats.EncodedConn
+	EncConn      *nats.EncodedConn
+	Interceptors []ServerInterceptor
 }
 
-func NewServer(encConn *nats.EncodedConn) *Server {
-	return &Server{EncConn: encConn}
+func NewServer(encConn *nats.EncodedConn, interceptors ...ServerInterceptor) *Server {
+	return &Server{
+		EncConn:      encConn,
+		Interceptors: interceptors,
+	}
 }
 
 func (s *Server) Handle(subject, queue string, handlerFn HandlerFunc) *nats.Subscription {
@@ -46,9 +52,24 @@ func (s *Server) handleMessageAsync(subject, replyTo string, message *message.Me
 		// todo: fill the context with metadata
 		ctx := context.Background()
 
+		// execute the interceptors
+		handlerFn = s.chainInterceptors(handlerFn)
+
 		// call the handler func
 		if err := handlerFn(ctx, subject, replyTo, message); err != nil {
 			log.Printf("[ERROR] failed to handle the subject %s: %s", subject, err)
 		}
 	}()
+}
+
+func (s *Server) chainInterceptors(endpoint HandlerFunc) HandlerFunc {
+	if len(s.Interceptors) == 0 {
+		return endpoint
+	}
+
+	handler := s.Interceptors[len(s.Interceptors)-1](endpoint)
+	for i := len(s.Interceptors) - 2; i >= 0; i-- {
+		handler = s.Interceptors[i](handler)
+	}
+	return handler
 }

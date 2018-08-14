@@ -7,6 +7,7 @@ import (
 	"github.com/nats-io/go-nats/encoders/protobuf"
 
 	"github.com/sknv/micronats/app/lib/xnats"
+	"github.com/sknv/micronats/app/lib/xnats/interceptors"
 	"github.com/sknv/micronats/app/lib/xos"
 	"github.com/sknv/micronats/app/math/cfg"
 	"github.com/sknv/micronats/app/math/server"
@@ -22,7 +23,7 @@ func main() {
 	defer encConn.Close()
 
 	// handle nats requests
-	natsServer := xnats.NewServer(encConn) // todo: add interceptors
+	natsServer := xnats.NewServer(encConn, interceptors.WithLogger)
 	server.RegisterMathServer(natsServer, &server.MathImpl{})
 
 	log.Print("[INFO] math service started")
