@@ -1,10 +1,28 @@
 version: '3.5'
 
 services:
+  consul:
+    image: consul:1.2.2
+    command: agent -dev -ui -client=0.0.0.0 -log-level=info # dev mode with web ui
+    network_mode: host
+    # ports:
+    #   - 8500:8500 # consul port
+    restart: unless-stopped
+
+  fabio:
+    image: fabiolb/fabio:1.5.9-go1.10.2
+    network_mode: host
+    # ports:
+    #   - 9998:9998 # fabio load balancer web ui port
+    #   - 9999:9999 # fabio load balancer port
+    volumes:
+      - ./fabio/fabio.properties:/etc/fabio/fabio.properties
+    restart: unless-stopped
+
   nats:
     image: nats:1.2.0-linux
-    entrypoint: /gnatsd -DV -m 8222
-    ports:
-      - 4222:4222 # nats port
-      - 8222:8222 # nats monitoring port
+    command: -DV # debug and verbose mode
+    network_mode: host
+    # ports:
+    #   - 4222:4222 # nats port
     restart: unless-stopped
