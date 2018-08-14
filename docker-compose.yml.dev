@@ -21,8 +21,9 @@ services:
 
   nats:
     image: nats:1.2.0-linux
-    command: -DV # debug and verbose mode
+    command: -DV -m 8222 # debug and verbose mode + monitoring
     network_mode: host
     # ports:
     #   - 4222:4222 # nats port
+    #   - 8222:8222 # nats monitoring port
     restart: unless-stopped

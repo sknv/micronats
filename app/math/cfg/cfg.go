@@ -7,7 +7,9 @@ import (
 )
 
 type Config struct {
-	NatsAddr string `long:"nats-addr" env:"NATS_ADDR" default:"nats://127.0.0.1:4222" description:"nats address"`
+	Addr       string `long:"math-addr" env:"MATH_ADDR" default:":8000" description:"math server address"`
+	NatsAddr   string `long:"nats-addr" env:"NATS_ADDR" default:"nats://127.0.0.1:4222" description:"nats address"`
+	ConsulAddr string `long:"consul-addr" env:"CONSUL_ADDR" default:"127.0.0.1:8500" description:"consul address"`
 }
 
 func Parse() *Config {
