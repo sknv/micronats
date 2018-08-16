@@ -16,7 +16,7 @@ import (
 	"github.com/sknv/micronats/app/lib/xnats/interceptors"
 	"github.com/sknv/micronats/app/lib/xos"
 	"github.com/sknv/micronats/app/math/cfg"
-	"github.com/sknv/micronats/app/math/server"
+	math "github.com/sknv/micronats/app/math/server"
 )
 
 const (
@@ -40,7 +40,7 @@ func main() {
 
 	// handle nats requests
 	natsServer := xnats.NewServer(encConn, interceptors.WithLogger)
-	server.RegisterMathServer(natsServer, &server.MathImpl{})
+	math.RegisterMathServer(natsServer, &math.MathImpl{})
 	xnats.RegisterHealthServer(natsConn) // handle nats health check requests
 
 	// config the http router for health checks

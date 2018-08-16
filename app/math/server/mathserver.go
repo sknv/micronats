@@ -9,14 +9,14 @@ import (
 	"github.com/sknv/micronats/app/lib/xnats"
 	"github.com/sknv/micronats/app/lib/xnats/message"
 	"github.com/sknv/micronats/app/lib/xnats/status"
-	"github.com/sknv/micronats/app/math/rpc"
+	math "github.com/sknv/micronats/app/math/rpc"
 )
 
 const (
 	mathQueue = "math"
 )
 
-func RegisterMathServer(natsServer *xnats.Server, math rpc.Math) {
+func RegisterMathServer(natsServer *xnats.Server, math math.Math) {
 	mathServer := newMathServer(natsServer.EncConn, math)
 	mathServer.route(natsServer)
 }
@@ -27,11 +27,11 @@ func RegisterMathServer(natsServer *xnats.Server, math rpc.Math) {
 
 type mathServer struct {
 	encoder   nats.Encoder
-	math      rpc.Math
+	math      math.Math
 	publisher *xnats.Publisher
 }
 
-func newMathServer(encConn *nats.EncodedConn, math rpc.Math) *mathServer {
+func newMathServer(encConn *nats.EncodedConn, math math.Math) *mathServer {
 	return &mathServer{
 		encoder:   encConn.Enc,
 		math:      math,
@@ -41,12 +41,12 @@ func newMathServer(encConn *nats.EncodedConn, math rpc.Math) *mathServer {
 
 // map a request to a subject
 func (s *mathServer) route(natsServer *xnats.Server) {
-	natsServer.Handle(rpc.CircleSubject, mathQueue, s.circle)
-	natsServer.Handle(rpc.RectSubject, mathQueue, s.rect)
+	natsServer.Handle(math.CircleSubject, mathQueue, s.circle)
+	natsServer.Handle(math.RectSubject, mathQueue, s.rect)
 }
 
 func (s *mathServer) circle(ctx context.Context, subject, replyTo string, message *message.Message) error {
-	args := new(rpc.CircleArgs)
+	args := new(math.CircleArgs)
 	if err := s.decodeArgs(subject, replyTo, message, args); err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (s *mathServer) circle(ctx context.Context, subject, replyTo string, messag
 }
 
 func (s *mathServer) rect(ctx context.Context, subject, replyTo string, message *message.Message) error {
-	args := new(rpc.RectArgs)
+	args := new(math.RectArgs)
 	if err := s.decodeArgs(subject, replyTo, message, args); err != nil {
 		return err
 	}
