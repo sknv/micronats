@@ -22,7 +22,7 @@ func Metadata(ctx context.Context) metadata {
 func WithMetaValue(ctx context.Context, key, value string) context.Context {
 	meta := Metadata(ctx)
 	if meta == nil { // create a new map if not exist
-		meta = make(map[string]string)
+		meta = make(metadata)
 	}
 	meta[key] = value // upsert the value
 	return context.WithValue(ctx, metadataContextKey, meta)
