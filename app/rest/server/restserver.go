@@ -18,26 +18,31 @@ import (
 	math "github.com/sknv/micronats/app/math/rpc"
 )
 
-type RestServer struct {
+func RegisterRestServer(encConn *nats.EncodedConn, router chi.Router) {
+	restServer := newRestServer(encConn)
+	restServer.route(router)
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+type restServer struct {
 	mathClient math.Math
 }
 
-func NewRestServer(encConn *nats.EncodedConn) *RestServer {
-	return &RestServer{mathClient: math.NewMathClient(encConn)}
+func newRestServer(encConn *nats.EncodedConn) *restServer {
+	return &restServer{mathClient: math.NewMathClient(encConn)}
 }
 
-func (s *RestServer) Route(router chi.Router) {
+func (s *restServer) route(router chi.Router) {
 	router.Route("/math", func(r chi.Router) {
 		r.Get("/circle", s.circle)
 		r.Get("/rect", s.rect)
 	})
 }
 
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-func (s *RestServer) circle(w http.ResponseWriter, r *http.Request) {
+func (s *restServer) circle(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	radius := parseFloat(w, queryParams.Get("r"))
 	args := math.CircleArgs{
@@ -56,7 +61,7 @@ func (s *RestServer) circle(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, reply)
 }
 
-func (s *RestServer) rect(w http.ResponseWriter, r *http.Request) {
+func (s *restServer) rect(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	width := parseFloat(w, queryParams.Get("w"))
 	height := parseFloat(w, queryParams.Get("h"))

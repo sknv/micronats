@@ -43,13 +43,8 @@ func main() {
 	xchi.UseDefaultMiddleware(router)
 	xchi.UseThrottle(router, concurrentRequestLimit)
 
-	// handle requests
-	rest := server.NewRestServer(encConn)
-	rest.Route(router)
-
-	// handle health check requests
-	var health xhttp.HealthServer
-	router.Get(healthCheckURL, health.Check)
+	server.RegisterRestServer(encConn, router) // handle rest api requests
+	registerHealthServer(router)               // handle health check requests
 
 	// start the http server and schedule a stop
 	srv := xhttp.NewServer(cfg.Addr, router)
@@ -62,6 +57,11 @@ func main() {
 
 	// wait for a program exit to stop the http server
 	xos.WaitForExit()
+}
+
+func registerHealthServer(router chi.Router) {
+	var health xhttp.HealthServer
+	router.Get(healthCheckURL, health.Check)
 }
 
 // ----------------------------------------------------------------------------
