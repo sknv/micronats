@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package x.nats;
+option go_package = "nats";
+
+import "status.proto";
+
+message Payload {
+    bytes body = 1;
+    map<string, string> meta = 2;
+    x.nats.Status status = 3;
+}

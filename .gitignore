@@ -1,16 +1,27 @@
-# Binaries for programs and plugins
+# binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 
-# Test binary, build with `go test -c`
+# test binary, build with `go test -c`
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# ignore environment variables and docker-compose files
+# IDE
+.idea/
+.vscode/
+
+# vendor files
+vendor/
+
+# ignore environment specific files
 .env
 docker-compose.yml
+
+# generated proto files
+*.pb.go
+

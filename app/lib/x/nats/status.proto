@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package x.nats;
+option go_package = "nats";
+
+message Status {
+    int32 code = 1;
+    string message = 2;
+    map<string, string> meta = 3;
+}

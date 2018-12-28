@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package bringo.auth;
+option go_package = "rpc";
+
+message Empty {}
+
+message Credentials {
+    string login = 1; // required
+    string password = 2; // required
+}
+
+message Tokens {
+    string accessToken = 1;
+    int64 expiresAt = 2;
+    string refresh_token = 3;
+}
+
+message RefreshToken {
+    string refreshToken = 1; // required
+}
